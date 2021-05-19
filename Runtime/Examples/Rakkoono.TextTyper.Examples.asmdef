@@ -2,7 +2,8 @@
     "name": "Rakkoono.TextTyper.Examples",
     "rootNamespace": "",
     "references": [
-        "Unity.TextMeshPro"
+        "Unity.TextMeshPro",
+        "Rakkoono.TextTyper"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
