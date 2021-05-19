@@ -1,13 +1,13 @@
 Unity-TextTyper
 =========================
 
-TextTyper is a text typing effect component for Unity. TextTyper prints out characters one by one to a uGUI Text component. Adapted by RedBlueGames from synchrok's GitHub project (https://github.com/synchrok/TypeText).
+TextTyper is a text typing effect component for Unity. TextTyper prints out characters one by one to a uGUI Text component. Adapted by RedBlueGames from synchrok's GitHub project (https://github.com/synchrok/TypeText). - *Forked by Rakkoono from Laicasaane's edit*
 
 It's easy to find other examples of Text printing components, but TextTyper provides two major differences:
 * Correct wrapping as characters are printed
 * Support for Rich Text Tags
 
-**Note this verison of TextTyper requires TextMeshPro, which can be installed for free from the Package Manager in Unity 2018, or the Asset Store in older versions. If you want the version that is compatible with Unity's uGUI Text component, [this branch](https://github.com/redbluegames/unity-text-typer/tree/ugui-text-typer) or download [this release](https://github.com/redbluegames/unity-text-typer/releases/tag/v1.2).**
+**Note this version of TextTyper requires TextMeshPro, which can be installed for free from the Package Manager in Unity 2020, or the Asset Store in older versions. If you want the version that is compatible with Unity's uGUI Text component, [this branch](https://github.com/redbluegames/unity-text-typer/tree/ugui-text-typer) or download [this release](https://github.com/redbluegames/unity-text-typer/releases/tag/v1.2).**
 
 How To Use
 --------
@@ -35,6 +35,9 @@ Features
 Changelog on UPM branch
 --------
 
+### 3.1.0
+- Add `TextLibrary` scriptable object, so you can easily add your own tags made of other ones
+
 ### 2.3.0
 - Add `PrintAmount` to the config to support printing any number of characters each time.
 
@@ -53,11 +56,6 @@ Changelog on UPM branch
 
 ### 2.1.2
 - `TextTyper` now requires `TMP_Text` instead of `TextMeshProUGUI`
-
-Screenshots
---------
-![TypeText Screenshot GIF](https://github.com/redbluegames/unity-text-typer/blob/master/README-Images/ss_chat_watermarked.gif)
-Image of TextTyper in Sparklite (© RedBlueGames 2016)
 
 The Code
 --------
