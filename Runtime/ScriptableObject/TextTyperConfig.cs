@@ -19,9 +19,12 @@
         private List<string> punctuations = new List<string>
         {
             ".",
+            ":",
             ",",
+            ";",
             "!",
-            "?"
+            "?",
+            "-"
         };
 
         public List<string> Punctuations
