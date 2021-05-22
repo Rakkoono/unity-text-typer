@@ -17,6 +17,8 @@ MonoBehaviour:
   PunctuationDelayMultiplier: 8
   punctuations:
   - .
+  - ':'
   - ','
+  - ;
   - '!'
   - '?'
