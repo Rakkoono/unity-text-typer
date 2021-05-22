@@ -158,7 +158,8 @@
         {
             if (enableWebLinks)
             {
-                int linkIndex = TMP_TextUtilities.FindIntersectingLink(this.TextComponent, eventData.position, Camera.main);
+                Camera cam = this.TextComponent.canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : Camera.main;
+                int linkIndex = TMP_TextUtilities.FindIntersectingLink(this.TextComponent, eventData.position, cam);
                 if (linkIndex != -1)
                     Application.OpenURL(this.textComponent.textInfo.linkInfo[linkIndex].GetLinkID());
             }
