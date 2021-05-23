@@ -954,12 +954,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 40868536fcc3c2c458788a1cd1298e8f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  config: {fileID: 11400000, guid: ada8fdf4267aff249911b434bab3d2de, type: 2}
-  shakeLibrary: {fileID: 11400000, guid: 9a6156b25fcccac4e97ef1c8d23def06, type: 2}
-  curveLibrary: {fileID: 11400000, guid: 1807857dbc33603469f5046b18ae0aae, type: 2}
-  tagLibrary: {fileID: 11400000, guid: 9c62ef42a98554441bb47ed7af14a007, type: 2}
+  config: {fileID: 11400000, guid: d4ddab176b1c49744bb2fab0dc7909e5, type: 2}
+  shakeLibrary: {fileID: 11400000, guid: 388cc664b0da486408e79dd5b3534202, type: 2}
+  curveLibrary: {fileID: 11400000, guid: 02de10431af581341918436bb66eaf2e, type: 2}
+  tagLibrary: {fileID: 11400000, guid: 44474dd62d71d3240a24661b3ba13ddf, type: 2}
   useUnscaledTime: 0
   enableWebLinks: 1
+  initializeOnAwake: 0
   printCompleted:
     m_PersistentCalls:
       m_Calls: []
@@ -1338,10 +1339,10 @@ MonoBehaviour:
   m_GameObject: {fileID: 1888324654}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ece93e789392cab498408406d4438896, type: 3}
+  m_Script: {fileID: 11500000, guid: 13dc4090603b60941b2f7b143db1c320, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  printSoundEffect: {fileID: 8300000, guid: 4457c27178d8e4ec2aef0a0406b75e06, type: 3}
+  printSoundEffect: {fileID: 8300000, guid: 41a533008d886b5469c42d1cd05c064e, type: 3}
   nextButton: {fileID: 553241497}
   autoToggle: {fileID: 1500580628}
   testTextTyper: {fileID: 1344613602}
