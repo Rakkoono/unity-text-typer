@@ -13,7 +13,7 @@
     /// Type text component types out Text one character at a time. Heavily adapted from synchrok's GitHub project.
     /// </summary>
     [RequireComponent(typeof(TMP_Text))]
-    public sealed class TextTyper : MonoBehaviour, IPointerClickHandler
+    public sealed class TextTyper : MonoBehaviour
     {
         /// <summary>
         /// The delay time between each print.
@@ -75,10 +75,6 @@
         [SerializeField]
         [Tooltip("If set, the typer will type text even if the game is paused (Time.timeScale = 0).")]
         private bool useUnscaledTime = false;
-
-        [SerializeField]
-        [Tooltip("If set, the typer will try to open <link=...> tags on click.")]
-        private bool enableWebLinks = false;
 
         [SerializeField]
         [Tooltip("If set, animation and custom tags will be resolved on awake.")]
@@ -157,17 +153,6 @@
         /// This number will be reset each time this <see cref="TextTyper"/> starts printing text.
         /// </summary>
         public int PrintedCharacters { get; private set; }
-
-        public void OnPointerClick(PointerEventData eventData)
-        {
-            if (enableWebLinks)
-            {
-                Camera cam = this.TextComponent.canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : Camera.main;
-                int linkIndex = TMP_TextUtilities.FindIntersectingLink(this.TextComponent, eventData.position, cam);
-                if (linkIndex != -1)
-                    Application.OpenURL(this.textComponent.textInfo.linkInfo[linkIndex].GetLinkID());
-            }
-        }
 
         private void Awake()
         {
