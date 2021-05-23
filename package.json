@@ -2,7 +2,7 @@
   "name": "com.laicasaane.texttyper",
   "version": "3.1.1",
   "displayName": "TextTyper",
-  "description": "Text typing effect, custom text animations and text for Unity TextMeshPro",
+  "description": "Text typing effect, custom text animations and tags for Unity TextMeshPro.",
   "unity": "2018.3",
   "dependencies": {
     "com.unity.textmeshpro": "3.0.0"
