@@ -73,12 +73,16 @@
         private TagLibrary tagLibrary = null;
 
         [SerializeField]
-        [Tooltip("If set, the typer will type text even if the game is paused (Time.timeScale = 0)")]
+        [Tooltip("If set, the typer will type text even if the game is paused (Time.timeScale = 0).")]
         private bool useUnscaledTime = false;
 
         [SerializeField]
-        [Tooltip("If set, the typer will try to open <link=...> tags on click")]
+        [Tooltip("If set, the typer will try to open <link=...> tags on click.")]
         private bool enableWebLinks = false;
+
+        [SerializeField]
+        [Tooltip("If set, animation and custom tags will be resolved on awake.")]
+        private bool initializeOnAwake = false;
 
         [SerializeField]
         [Tooltip("Event that's called when the text has finished printing.")]
@@ -162,6 +166,15 @@
                 int linkIndex = TMP_TextUtilities.FindIntersectingLink(this.TextComponent, eventData.position, cam);
                 if (linkIndex != -1)
                     Application.OpenURL(this.textComponent.textInfo.linkInfo[linkIndex].GetLinkID());
+            }
+        }
+
+        private void Awake()
+        {
+            if (initializeOnAwake)
+            {
+                string text = this.TextComponent.text;
+                TypeText(text, config, text.Length);
             }
         }
 

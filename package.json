@@ -1,14 +1,13 @@
 {
-    "name": "com.laicasaane.texttyper",
-    "version": "3.1.0",
-    "displayName": "TextTyper",
-    "description": "Text typing effect for Unity TextMeshPro",
-    "unity": "2020.3",
-    "dependencies": {
-        "com.unity.textmeshpro": "3.0.6"
-    },
-    "author":  "Laicasaane <https://github.com/laicasaane/> (https://github.com/laicasaane/), edited by Rakkoono <https://rakkoono.github.io> (https://rakkoono.github.io)",
-    "license": "MIT", 
-    "documentationUrl": "https://github.com/rakkoono/unity-text-typer#readme.md",
-    "type": "library"
+  "name": "com.laicasaane.texttyper",
+  "version": "3.1.0",
+  "displayName": "TextTyper",
+  "description": "Text typing effect, custom text animations and text for Unity TextMeshPro",
+  "unity": "2018.3",
+  "dependencies": {
+    "com.unity.textmeshpro": "3.0.0"
+  },
+  "license": "MIT",
+  "documentationUrl": "https://github.com/rakkoono/unity-text-typer#readme.md",
+  "type": "library"
 }
