@@ -8,6 +8,6 @@
     "com.unity.textmeshpro": "3.0.0"
   },
   "license": "MIT",
-  "documentationUrl": "https://github.com/rakkoono/unity-text-typer#readme.md",
+  "documentationUrl": "https://github.com/rakkoono/unity-text-typer#readme",
   "type": "library"
 }
