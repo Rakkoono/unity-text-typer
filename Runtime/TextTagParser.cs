@@ -110,18 +110,30 @@
             }
         }
 
-        public static string RemoveAllTags(string textWithTags)
+        public static string RemoveAllTags(string textWithTags, TagLibrary library)
         {
             string textWithoutTags = textWithTags;
             textWithoutTags = RemoveUnityTags(textWithoutTags);
             textWithoutTags = RemoveCustomTags(textWithoutTags);
+            textWithoutTags = RemoveLibraryTags(textWithoutTags, library);
 
             return textWithoutTags;
         }
 
-        public static string RemoveCustomTags(string textWithTags) => RemoveTags(textWithTags, CustomTagTypes);
+        public static string RemoveCustomTags(string textWithTags)
+        {
+            return RemoveTags(textWithTags, CustomTagTypes);
+        }
 
-        public static string RemoveUnityTags(string textWithTags) => RemoveTags(textWithTags, UnityTags);
+        public static string RemoveUnityTags(string textWithTags)
+        {
+            return RemoveTags(textWithTags, UnityTags);
+        }
+
+        public static string RemoveLibraryTags(string textWithTags, TagLibrary library)
+        {
+            return RemoveTags(textWithTags, library.ToStringArray());
+        }
 
         private static string RemoveTags(string textWithTags, params string[] tags)
         {

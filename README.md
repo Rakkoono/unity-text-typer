@@ -28,7 +28,7 @@ Features
 - **OnComplete Callback**
 - **OnCharacterPrinted Callback (for audio)**
 - **Custom Animations**
-- <s>**Custom Tags with arguments**</s> - Removed: Use TMP Stylesheets instead
+- **Custom Tags with arguments**
 
 + **Example Scene, Libraries, Config & Tester Script**
 
