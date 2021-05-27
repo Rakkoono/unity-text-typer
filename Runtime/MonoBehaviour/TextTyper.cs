@@ -69,10 +69,6 @@
         private CurveLibrary curveLibrary = null;
 
         [SerializeField]
-        [Tooltip("The library of TagPreset animations that can be used by this component.")]
-        private TagLibrary tagLibrary = null;
-
-        [SerializeField]
         [Tooltip("If set, the typer will type text even if the game is paused (Time.timeScale = 0).")]
         private bool useUnscaledTime = false;
 
@@ -335,11 +331,11 @@
 
         private IEnumerator TypeTextCharByChar(int skipChars, int printAmount)
         {
-            this.taglessText = TextTagParser.RemoveAllTags(text, tagLibrary);
+            this.taglessText = TextTagParser.RemoveAllTags(text);
             var totalChars = this.taglessText.Length;
             this.PrintedCharacters = Mathf.Clamp(skipChars, 0, totalChars);
 
-            this.TextComponent.SetText(TextTagParser.RemoveLibraryTags(TextTagParser.RemoveCustomTags(text), tagLibrary));
+            this.TextComponent.SetText(TextTagParser.RemoveCustomTags(text));
 
             while (this.PrintedCharacters < totalChars)
             {
@@ -432,197 +428,86 @@
 
                 if (symbol.IsTag)
                 {
-                    var tagPreset = tagLibrary.Presets.FirstOrDefault(tag => symbol.Tag.Equals(tag.Name));
-
-                    if (tagPreset != default(TagPreset))
-                    {
-                        // Wrapping the same user defined tag twice won't work properly
-                        RichTextTag tag;
-                        if (symbol.Tag.IsOpeningTag)
-                            userDefinedTagStack.Push(tag = symbol.Tag);
-                        else
-                        {
-                            tag = userDefinedTagStack.Pop();
-                            var otherTags = new Stack<RichTextTag>();
-                            while (tag.TagType != symbol.Tag.TagType)
-                            {
-                                otherTags.Push(tag);
-                                tag = userDefinedTagStack.Pop();
-                            }
-                            foreach (var otherTag in otherTags)
-                                userDefinedTagStack.Push(otherTag);
-                        }
-
-                        // Construct tag string
-                        string tags = "";
-                        string[] @params = tag.Parameter.Split(',', ';');
-
-                        // Add sub-tags to tag string
-                        foreach (var subTag in tagPreset.subTags)
-                        {
-                            // Skip if one sided tag requirements aren't fulfilled
-                            if (symbol.Tag.IsOpeningTag)
-                            {
-                                if (subTag.type == Tag.OneSidedOnClose)
-                                    continue;
-                            }
-                            else if (subTag.type == Tag.OneSidedOnOpen)
-                                continue;
-
-                            // Get argument/override
-                            string arg = subTag.argument;
-                            if (subTag.overrideArgument != 0 && @params.Length >= subTag.overrideArgument && @params[subTag.overrideArgument - 1] != string.Empty)
-                                arg = @params[subTag.overrideArgument - 1];
-
-                            // Skip if required argument is missing
-                            if (subTag.argumentRequired && arg == string.Empty)
-                                continue;
-
-                            // Start tag
-                            string tagString = "<" + subTag.tag;
-
-                            if (symbol.Tag.IsOpeningTag || subTag.type != Tag.TwoSided)
-                            {
-                                // Insert primary argument
-                                if (arg != string.Empty)
-                                    tagString += "=" + arg;
-
-                                // Insert secondary arguments
-                                if (subTag.secondaryArguments != string.Empty)
-                                {
-                                    string secondaryArguments = subTag.secondaryArguments;
-
-                                    if (@params.Length != 0)
-                                    {
-                                        string suppliedParamRegex = @"%param=([1-" + @params.Length + @"])%";
-                                        int val = 1111;
-                                        string before = secondaryArguments;
-                                        secondaryArguments = Regex.Replace(secondaryArguments, suppliedParamRegex, match => @params[val = int.Parse(match.Groups[1].Value) - 1]);
-                                    }
-                                    string paramRegex = @" *[\w]*=*%param=\d+%";
-                                    secondaryArguments = Regex.Replace(secondaryArguments, paramRegex, "");
-
-                                    tagString += " " + secondaryArguments;
-                                }
-                            }
-                            else if (subTag.type == Tag.TwoSided)
-                            {
-                                // Mark as closing tag
-                                tagString = tagString.Insert(1, "/");
-                            }
-
-                            // End tag
-                            tagString += ">";
-
-                            // Add to string (invert order if closing tag)
-                            tags = symbol.Tag.IsClosingTag ? tags + tagString : tagString + tags;
-                        }
-
-                        // Add prefix / suffix to tag string
-                        if (symbol.Tag.IsOpeningTag)
-                        {
-                            // Add prefix
-                            tags = tags + tagPreset.prefix;
-
-                            // If close immediately, insert closing tag
-                            if (tagPreset.CloseImmediately)
-                                tags += "</" + tagPreset.Name + ">";
-                        }
-                        else
-                        {
-                            // Add suffix
-                            tags = tagPreset.suffix + tags;
-                        }
-
-                        // Insert tag string in text and symbol list
-                        this.text = this.text.Insert(indexInText, tags);
-                        var tagsAsSymbolList = new List<TextSymbol>();
-                        TextTagParser.CreateSymbolListFromText(tags, tagsAsSymbolList);
-                        this.textAsSymbolList.InsertRange(i + 1, tagsAsSymbolList);
-                    }
+                    // Save tag parameters
+                    string tagParam;
+                    if (symbol.Tag.IsOpeningTag)
+                        customTagParams.Push(tagParam = symbol.Tag.Parameter);
                     else
+                        tagParam = customTagParams.Pop();
+
+                    if (symbol.Tag.Equals(TextTagParser.CustomTags.Delay))
                     {
-                        // Save tag parameters
-                        string tagParam;
-                        if (symbol.Tag.IsOpeningTag)
-                            customTagParams.Push(tagParam = symbol.Tag.Parameter);
+                        if (symbol.Tag.IsClosingTag)
+                        {
+                            nextDelay = printDelay;
+                        }
                         else
-                            tagParam = customTagParams.Pop();
-
-                        if (symbol.Tag.Equals(TextTagParser.CustomTags.Delay))
                         {
-                            if (symbol.Tag.IsClosingTag)
+                            nextDelay = symbol.GetFloatParameter(printDelay);
+                        }
+                    }
+                    else if (symbol.Tag.Equals(TextTagParser.CustomTags.Speed))
+                    {
+                        if (symbol.Tag.IsClosingTag)
+                        {
+                            nextDelay = printDelay;
+                        }
+                        else
+                        {
+                            var speed = symbol.GetFloatParameter(1f);
+
+                            if (Mathf.Approximately(speed, 0f))
                             {
                                 nextDelay = printDelay;
                             }
-                            else
+                            else if (speed < 0f)
                             {
-                                nextDelay = symbol.GetFloatParameter(printDelay);
+                                nextDelay = printDelay * Mathf.Abs(speed);
                             }
-                        }
-                        else if (symbol.Tag.Equals(TextTagParser.CustomTags.Speed))
-                        {
-                            if (symbol.Tag.IsClosingTag)
+                            else if (speed > 0f)
+                            {
+                                nextDelay = printDelay / Mathf.Abs(speed);
+                            }
+                            else
                             {
                                 nextDelay = printDelay;
                             }
-                            else
-                            {
-                                var speed = symbol.GetFloatParameter(1f);
-
-                                if (Mathf.Approximately(speed, 0f))
-                                {
-                                    nextDelay = printDelay;
-                                }
-                                else if (speed < 0f)
-                                {
-                                    nextDelay = printDelay * Mathf.Abs(speed);
-                                }
-                                else if (speed > 0f)
-                                {
-                                    nextDelay = printDelay / Mathf.Abs(speed);
-                                }
-                                else
-                                {
-                                    nextDelay = printDelay;
-                                }
-                            }
                         }
-                        else if (symbol.Tag.Equals(TextTagParser.CustomTags.Anim) ||
-                                 symbol.Tag.Equals(TextTagParser.CustomTags.Animation))
+                    }
+                    else if (symbol.Tag.Equals(TextTagParser.CustomTags.Anim) ||
+                             symbol.Tag.Equals(TextTagParser.CustomTags.Animation))
+                    {
+                        if (symbol.Tag.IsClosingTag)
                         {
-                            if (symbol.Tag.IsClosingTag)
+                            // Add a TextAnimation component to process this animation
+                            TextAnimation anim = null;
+                            if (IsAnimationShake(tagParam))
                             {
-                                // Add a TextAnimation component to process this animation
-                                TextAnimation anim = null;
-                                if (IsAnimationShake(tagParam))
-                                {
-                                    anim = this.gameObject.AddComponent<ShakeAnimation>();
-                                    ((ShakeAnimation)anim).LoadPreset(this.shakeLibrary, tagParam);
-                                }
-                                else if (IsAnimationCurve(tagParam))
-                                {
-                                    anim = this.gameObject.AddComponent<CurveAnimation>();
-                                    ((CurveAnimation)anim).LoadPreset(this.curveLibrary, tagParam);
-                                }
-                                else
-                                {
-                                    Debug.LogWarning("Animation '" + tagParam + "' not found.");
-                                    continue;
-                                }
-
-                                anim.UseUnscaledTime = this.useUnscaledTime;
-                                anim.SetCharsToAnimate(customTagOpenIndex, printedCharCount - 1);
-                                anim.enabled = true;
-                                this.animations.Add(anim);
+                                anim = this.gameObject.AddComponent<ShakeAnimation>();
+                                ((ShakeAnimation)anim).LoadPreset(this.shakeLibrary, tagParam);
+                            }
+                            else if (IsAnimationCurve(tagParam))
+                            {
+                                anim = this.gameObject.AddComponent<CurveAnimation>();
+                                ((CurveAnimation)anim).LoadPreset(this.curveLibrary, tagParam);
                             }
                             else
-                                customTagOpenIndex = printedCharCount;
+                            {
+                                Debug.LogWarning("Animation '" + tagParam + "' not found.");
+                                continue;
+                            }
+
+                            anim.UseUnscaledTime = this.useUnscaledTime;
+                            anim.SetCharsToAnimate(customTagOpenIndex, printedCharCount - 1);
+                            anim.enabled = true;
+                            this.animations.Add(anim);
                         }
-                        else if (!TextTagParser.UnityTags.Contains(symbol.Tag.TagType))
-                        {
-                            Debug.LogWarning("Tag '" + symbol.Tag.TagType + "' not found.");
-                        }
+                        else
+                            customTagOpenIndex = printedCharCount;
+                    }
+                    else if (!TextTagParser.UnityTags.Contains(symbol.Tag.TagType))
+                    {
+                        Debug.LogWarning("Tag '" + symbol.Tag.TagType + "' not found.");
                     }
                 }
                 else
@@ -641,15 +526,9 @@
             }
         }
 
-        private bool IsAnimationShake(string animName)
-        {
-            return this.shakeLibrary.ContainsKey(animName);
-        }
+        private bool IsAnimationShake(string animName) => this.shakeLibrary.ContainsKey(animName);
 
-        private bool IsAnimationCurve(string animName)
-        {
-            return this.curveLibrary.ContainsKey(animName);
-        }
+        private bool IsAnimationCurve(string animName) => this.curveLibrary.ContainsKey(animName);
 
         private void OnCharacterPrinted(string printedCharacter)
         {
