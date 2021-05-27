@@ -957,7 +957,9 @@ MonoBehaviour:
   config: {fileID: 11400000, guid: d4ddab176b1c49744bb2fab0dc7909e5, type: 2}
   shakeLibrary: {fileID: 11400000, guid: 388cc664b0da486408e79dd5b3534202, type: 2}
   curveLibrary: {fileID: 11400000, guid: 02de10431af581341918436bb66eaf2e, type: 2}
+  tagLibrary: {fileID: 11400000, guid: 44474dd62d71d3240a24661b3ba13ddf, type: 2}
   useUnscaledTime: 0
+  enableWebLinks: 1
   initializeOnAwake: 0
   printCompleted:
     m_PersistentCalls:
@@ -1372,6 +1374,11 @@ MonoBehaviour:
     Some Sample Curve Animations:
     <animation=slowsine>Slow Sine</animation>, <animation=bounce>Bounce Bounce</animation>,
     <animation=crazyflip>Crazy Flip</animation>;'
+  - You can also add custom tags for styling and inserting text using a <Keyword>Tag
+    Library</Keyword>.
+  - Or you can enable <HighlightedLink=https://github.com/Rakkoono/unity-text-typer>web
+    link tags</HighlightedLink> in the text typer component.
+  - Well, that's enough from me, <C1>! <Smiley=3>
 --- !u!4 &1888324656
 Transform:
   m_ObjectHideFlags: 0
