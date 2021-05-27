@@ -414,7 +414,6 @@
             var printedCharCount = 0;
             var customTagOpenIndex = 0;
             var customTagParams = new Stack<string>();
-            var userDefinedTagStack = new Stack<RichTextTag>();
 
             var nextDelay = printDelay;
             var punctuations = GetPunctutations();
