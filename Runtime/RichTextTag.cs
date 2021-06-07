@@ -1,5 +1,7 @@
 ﻿namespace RedBlueGames.Tools.TextTyper
 {
+    using System.Collections.Generic;
+
     /// <summary>
     /// RichTextTags help parse text that contains HTML style tags, used by Unity's RichText text components.
     /// </summary>
@@ -10,7 +12,7 @@
         private const char OpeningNodeDelimeter = '<';
         private const char CloseNodeDelimeter = '>';
         private const char EndTagDelimeter = '/';
-        private const string ParameterDelimeter = "=";
+        private const char ParameterDelimeter = '=';
 
         /// <summary>
         /// Initializes a new instance of the <see cref="RichTextTag"/> class.
@@ -19,6 +21,22 @@
         public RichTextTag(string tagText)
         {
             this.TagText = tagText;
+
+            var paramArray = RemoveTagDelimeters(tagText).Split(' ');
+            for (int i = 0; i < paramArray.Length; i++)
+            {
+                var split = paramArray[i].Split(ParameterDelimeter);
+                if (i == 0)
+                {
+                    this.TagType = split[0];
+                    if (split.Length > 1)
+                        this.PrimaryParameter = split[1];
+                }
+                else if (split.Length > 1)
+                    this.paramDictionary.Add(split[0], split[1]);
+                else
+                    this.paramDictionary.Add(split[0], "*EMPTY*");
+            }
         }
 
         /// <summary>
@@ -28,123 +46,80 @@
         public string TagText { get; private set; }
 
         /// <summary>
-        /// Gets the text for this tag if it's used as a closing tag. Closing tags are unchanged.
-        /// </summary>
-        /// <value>The closing tag text.</value>
-        public string ClosingTagText
-        {
-            get
-            {
-                return this.IsClosingTag ? this.TagText : string.Format("</{0}>", this.TagType);
-            }
-        }
-
-        private string tagType = null;
-        /// <summary>
         /// Gets the TagType, the body of the tag as a string
         /// </summary>
         /// <value>The type of the tag.</value>
-        public string TagType
-        {
-            get
-            {
-                if (tagType == null)
-                {
-                    // Strip start and end tags
-                    tagType = this.TagText.Substring(1, this.TagText.Length - 2);
-                    tagType = tagType.TrimStart(EndTagDelimeter);
-
-                    // Strip Parameter
-                    var parameterDelimeterIndex = tagType.IndexOf(ParameterDelimeter);
-                    if (parameterDelimeterIndex > 0)
-                    {
-                        tagType = tagType.Substring(0, parameterDelimeterIndex);
-                    }
-
-                    // Strip Secondary Parameters
-                    tagType = tagType.Split()[0];
-                }
-
-                return tagType;
-            }
-        }
+        public string TagType { get; private set; }
 
         /// <summary>
         /// Gets the parameter as a string. Ex: For tag Color=#FF00FFFF the parameter would be #FF00FFFF.
         /// </summary>
         /// <value>The parameter.</value>
-        public string Parameter
+        public string PrimaryParameter { get; private set; }
+
+        /// <summary>
+        /// Gets the text for this tag if it's used as a closing tag. Closing tags are unchanged.
+        /// </summary>
+        /// <value>The closing tag text.</value>
+        public string ClosingTagText => this.IsClosingTag ? this.TagText : $"</{this.TagType}>";
+
+        public Dictionary<string, string> paramDictionary = new Dictionary<string, string>();
+        /// <summary>
+        /// Gets the string value for the given parameter
+        /// </summary>
+        /// <value>The value for the given parameter</value>
+        public string GetParameter(string parameter = "")
         {
-            get
+            if (parameter == "")
+                return PrimaryParameter;
+
+            if (paramDictionary.ContainsKey(parameter))
+                return paramDictionary[parameter];
+
+            return "";
+        }
+
+        private string RemoveTagDelimeters(string s)
+            => s.Replace(OpeningNodeDelimeter.ToString() + EndTagDelimeter.ToString(), "")
+                .Replace(CloseNodeDelimeter.ToString(), "")
+                .Replace(OpeningNodeDelimeter.ToString(), "");
+
+        private string RemoveEnclosingQuotes(string s)
+        {
+            if (s.Length > 1)
             {
-                var parameterDelimeterIndex = this.TagText.IndexOf(ParameterDelimeter);
-                if (parameterDelimeterIndex < 0)
-                {
-                    return string.Empty;
-                }
-
-                // Subtract two, one for the delimeter and one for the closing character
-                var parameterLength = this.TagText.Length - parameterDelimeterIndex - 2;
-                var parameter = this.TagText.Substring(parameterDelimeterIndex + 1, parameterLength);
-
-                // Kill optional enclosing quotes
-                if (parameter.Length > 0)
-                {
-                    if (parameter[0] == '\"' && parameter[parameter.Length - 1] == '\"')
-                    {
-                        parameter = parameter.Substring(1, parameter.Length - 2);
-                    }
-                }
-
-                return parameter;
+                char first = s[0], last = s[s.Length - 1];
+                if (first == '\"' && last == '\"' || first == '\'' && last == '\'')
+                    return s.Substring(1, s.Length - 2);
             }
+
+            return s;
         }
 
         /// <summary>
         /// Gets a value indicating whether this instance is an opening tag.
         /// </summary>
         /// <value><c>true</c> if this instance is an opening tag; otherwise, <c>false</c>.</value>
-        public bool IsOpeningTag
-        {
-            get
-            {
-                return !this.IsClosingTag;
-            }
-        }
+        public bool IsOpeningTag => !this.IsClosingTag;
 
         /// <summary>
         /// Gets a value indicating whether this instance is a closing tag.
         /// </summary>
         /// <value><c>true</c> if this instance is a closing tag; otherwise, <c>false</c>.</value>
-        public bool IsClosingTag
-        {
-            get
-            {
-                return this.TagText.Length > 2 && this.TagText[1] == EndTagDelimeter;
-            }
-        }
+        public bool IsClosingTag => this.TagText.Length > 2 && this.TagText[1] == EndTagDelimeter;
 
         /// <summary>
         /// Gets the length of the tag. Shorcut for the length of the full TagText.
         /// </summary>
         /// <value>The text length.</value>
-        public int Length
-        {
-            get
-            {
-                return this.TagText.Length;
-            }
-        }
+        public int Length => this.TagText.Length;
 
         /// <summary>
         /// Checks if the specified String starts with a tag.
         /// </summary>
         /// <returns><c>true</c>, if the first character begins a tag <c>false</c> otherwise.</returns>
         /// <param name="text">Text to check for tags.</param>
-        public static bool StringStartsWithTag(string text)
-        {
-            return text.StartsWith(RichTextTag.OpeningNodeDelimeter.ToString());
-        }
+        public static bool StringStartsWithTag(string text) => text.StartsWith(RichTextTag.OpeningNodeDelimeter.ToString());
 
         /// <summary>
         /// Parses the text for the next RichTextTag.

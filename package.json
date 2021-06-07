@@ -1,6 +1,6 @@
 {
   "name": "com.laicasaane.texttyper",
-  "version": "3.1.1",
+  "version": "3.1.2",
   "displayName": "TextTyper",
   "description": "Text typing effect, custom text animations and tags for Unity TextMeshPro.",
   "unity": "2018.3",

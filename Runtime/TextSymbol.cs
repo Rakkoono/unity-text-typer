@@ -64,13 +64,10 @@
             }
 
             float paramValue;
-            if (!float.TryParse(this.Tag.Parameter, out paramValue))
+            if (!float.TryParse(this.Tag.PrimaryParameter, out paramValue))
             {
-                var warning = string.Format(
-                              "Found Invalid parameter format in tag [{0}]. " +
-                              "Parameter [{1}] does not parse to a float.",
-                              this.Tag,
-                              this.Tag.Parameter);
+                var warning = $"Found Invalid parameter format in tag [{this.Tag}]. "
+                            + $"Parameter [{this.Tag.PrimaryParameter}] does not parse to a float.";
                 Debug.LogWarning(warning);
                 paramValue = defaultValue;
             }

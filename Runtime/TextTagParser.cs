@@ -120,18 +120,14 @@
             return textWithoutTags;
         }
 
-        public static string RemoveCustomTags(string textWithTags)
-        {
-            return RemoveTags(textWithTags, CustomTagTypes);
-        }
+        public static string RemoveCustomTags(string textWithTags) => RemoveTags(textWithTags, CustomTagTypes);
 
-        public static string RemoveUnityTags(string textWithTags)
-        {
-            return RemoveTags(textWithTags, UnityTags);
-        }
+        public static string RemoveUnityTags(string textWithTags) => RemoveTags(textWithTags, UnityTags);
 
         public static string RemoveLibraryTags(string textWithTags, TagLibrary library)
         {
+            if (library == null)
+                return textWithTags;
             return RemoveTags(textWithTags, library.ToStringArray());
         }
 

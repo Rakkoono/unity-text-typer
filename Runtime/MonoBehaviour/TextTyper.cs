@@ -432,7 +432,9 @@
 
                 if (symbol.IsTag)
                 {
-                    var tagPreset = tagLibrary.Presets.FirstOrDefault(tag => symbol.Tag.Equals(tag.Name));
+                    TagPreset tagPreset = default(TagPreset);
+                    if (tagLibrary != null)
+                        tagPreset = tagLibrary.Presets.FirstOrDefault(tag => symbol.Tag.Equals(tag.Name));
 
                     if (tagPreset != default(TagPreset))
                     {
@@ -455,74 +457,10 @@
 
                         // Construct tag string
                         string tags = "";
-                        string[] @params = tag.Parameter.Split(',', ';');
-
-                        // Add sub-tags to tag string
-                        foreach (var subTag in tagPreset.subTags)
-                        {
-                            // Skip if one sided tag requirements aren't fulfilled
-                            if (symbol.Tag.IsOpeningTag)
-                            {
-                                if (subTag.type == Tag.OneSidedOnClose)
-                                    continue;
-                            }
-                            else if (subTag.type == Tag.OneSidedOnOpen)
-                                continue;
-
-                            // Get argument/override
-                            string arg = subTag.argument;
-                            if (subTag.overrideArgument != 0 && @params.Length >= subTag.overrideArgument && @params[subTag.overrideArgument - 1] != string.Empty)
-                                arg = @params[subTag.overrideArgument - 1];
-
-                            // Skip if required argument is missing
-                            if (subTag.argumentRequired && arg == string.Empty)
-                                continue;
-
-                            // Start tag
-                            string tagString = "<" + subTag.tag;
-
-                            if (symbol.Tag.IsOpeningTag || subTag.type != Tag.TwoSided)
-                            {
-                                // Insert primary argument
-                                if (arg != string.Empty)
-                                    tagString += "=" + arg;
-
-                                // Insert secondary arguments
-                                if (subTag.secondaryArguments != string.Empty)
-                                {
-                                    string secondaryArguments = subTag.secondaryArguments;
-
-                                    if (@params.Length != 0)
-                                    {
-                                        string suppliedParamRegex = @"%param=([1-" + @params.Length + @"])%";
-                                        int val = 1111;
-                                        string before = secondaryArguments;
-                                        secondaryArguments = Regex.Replace(secondaryArguments, suppliedParamRegex, match => @params[val = int.Parse(match.Groups[1].Value) - 1]);
-                                    }
-                                    string paramRegex = @" *[\w]*=*%param=\d+%";
-                                    secondaryArguments = Regex.Replace(secondaryArguments, paramRegex, "");
-
-                                    tagString += " " + secondaryArguments;
-                                }
-                            }
-                            else if (subTag.type == Tag.TwoSided)
-                            {
-                                // Mark as closing tag
-                                tagString = tagString.Insert(1, "/");
-                            }
-
-                            // End tag
-                            tagString += ">";
-
-                            // Add to string (invert order if closing tag)
-                            tags = symbol.Tag.IsClosingTag ? tags + tagString : tagString + tags;
-                        }
-
-                        // Add prefix / suffix to tag string
                         if (symbol.Tag.IsOpeningTag)
                         {
-                            // Add prefix
-                            tags = tags + tagPreset.prefix;
+                            // Add On Opening Tag string
+                            tags = tags + tagPreset.onOpeningTag;
 
                             // If close immediately, insert closing tag
                             if (tagPreset.CloseImmediately)
@@ -530,8 +468,54 @@
                         }
                         else
                         {
-                            // Add suffix
-                            tags = tagPreset.suffix + tags;
+                            // Add On Closing Tag string
+                            tags = tagPreset.onClosingTag + tags;
+                        }
+
+                        // Replace $if{}[][]
+                        string ifRegex =
+                            @"\$if{([^{}]*)}" +     // Matches "$if{PARAM}"     ($1)
+                            @"\[([^\[\]]*)\]" +     // Matches "[IF]"           ($2)
+                            @"(\[[^\[\]]*\])?";     // Matches "[ELSE]"         (Optional, $3 in {})
+                        tags = Regex.Replace(tags, ifRegex, match =>
+                        {
+                            string value = tag.GetParameter(match.Groups[1].Value);
+                            if (value != "")
+                                return match.Groups[2].Value;
+
+                            string altValueMatch = match.Groups[3].Value;
+                            return altValueMatch.Substring(1, altValueMatch.Length - 2);
+                        });
+
+                        // Replace <...=${}{}...>
+                        string tagRegex =
+                            @"(<[\w]+=)" +      // Matches "<TAG="          ($1)
+                            @"\${([^{}]*)}" +   // Matches "${PARAM}"       ($2)
+                            @"({[^{}]*})?" +    // Matches "{ALT VALUE}"    (Optional, $3 in {})
+                            @"([^<>]*>)";       // Matches "ANY STRING>"    ($4)
+                        tags = Regex.Replace(tags, tagRegex, EvaluateMatch);
+
+                        // Replace ...${}{}...
+                        string paramRegex =
+                            @"([\w]*=?)" +      // Matches "ARG(=)"         ($1)
+                            @"\${([^{}]*)}" +   // Matches "${PARAM}"       ($2)
+                            @"({[^{}]*})?" +    // Matches "{ALT_VALUE}"    (Optional, $3 in {})
+                            @"()";              // Matches ""               ($4)
+                        tags = Regex.Replace(tags, paramRegex, EvaluateMatch);
+
+                        string EvaluateMatch(Match match) {
+                            string before = match.Groups[1].Value;
+                            string after = match.Groups[4].Value;
+
+                            string value = tag.GetParameter(match.Groups[2].Value);
+                            if (value != "")
+                                return before + value + after;
+
+                            string altValue = match.Groups[3].Value;
+                            if (altValue != "")
+                                return before + altValue.Substring(1, altValue.Length - 2) + after;
+
+                            return "";
                         }
 
                         // Insert tag string in text and symbol list
@@ -545,7 +529,7 @@
                         // Save tag parameters
                         string tagParam;
                         if (symbol.Tag.IsOpeningTag)
-                            customTagParams.Push(tagParam = symbol.Tag.Parameter);
+                            customTagParams.Push(tagParam = symbol.Tag.PrimaryParameter);
                         else
                             tagParam = customTagParams.Pop();
 
@@ -641,30 +625,20 @@
             }
         }
 
-        private bool IsAnimationShake(string animName)
-        {
-            return this.shakeLibrary.ContainsKey(animName);
-        }
+        private bool IsAnimationShake(string animName) => this.shakeLibrary.ContainsKey(animName);
 
-        private bool IsAnimationCurve(string animName)
-        {
-            return this.curveLibrary.ContainsKey(animName);
-        }
+        private bool IsAnimationCurve(string animName) => this.curveLibrary.ContainsKey(animName);
 
         private void OnCharacterPrinted(string printedCharacter)
         {
             if (this.CharacterPrinted != null)
-            {
                 this.CharacterPrinted.Invoke(printedCharacter);
-            }
         }
 
         private void OnTypewritingComplete()
         {
             if (this.PrintCompleted != null)
-            {
                 this.PrintCompleted.Invoke();
-            }
         }
 
         /// <summary>
