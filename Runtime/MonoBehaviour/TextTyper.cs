@@ -484,7 +484,7 @@
                                 return match.Groups[2].Value;
 
                             string altValueMatch = match.Groups[3].Value;
-                            return altValueMatch.Substring(1, altValueMatch.Length - 2);
+                            return altValueMatch == "" ? "" : altValueMatch.Substring(1, altValueMatch.Length - 2);
                         });
 
                         // Replace <...=${}{}...>
